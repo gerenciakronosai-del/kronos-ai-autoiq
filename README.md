@@ -1,21 +1,26 @@
 # Kronos AI — AutoIQ
 
-Motor de decisión y backtesting para trading algorítmico de corto plazo, con
-opciones binarias y con stop/objetivo.
+**Un backtester construido para no poder mentirte.**
 
-Python 3.11+ puro, **cero dependencias externas**. Se clona y funciona.
+Casi todos los backtests de trading dan resultados mejores que la realidad, y
+casi siempre por las mismas cuatro razones: miran datos del futuro sin querer,
+no modelan el coste de operar, se quedan con la mejor de cien pruebas sin
+corregir por ello, y no comparan contra ningún control. Este repositorio
+convierte esas cuatro trampas en tests automatizados que fallan si alguien las
+reintroduce.
+
+Python 3.11+ puro, **cero dependencias externas**, 359 tests.
 
 ```bash
-python -m kronos demo
+git clone <repo> && cd kronos-ai-autoiq
+python -m kronos selftest    # 359 tests, ~47 s, sin red
+python -m kronos demo        # pipeline completo de extremo a extremo
 ```
 
-## El resultado
+## Qué pasó cuando se apuntó a una pregunta real
 
-Este repositorio se construyó para encontrar una estrategia rentable. **No la
-encontró**, y ese es su resultado publicado.
-
-Se probaron ~300 hipótesis sobre cinco mercados y cuatro horizontes temporales,
-con hasta 25 años de datos reales:
+Se usó para buscar una estrategia rentable en mercados reales: ~300 hipótesis,
+cinco mercados, cuatro horizontes temporales, hasta 25 años de datos.
 
 | Mercado | Muestra | Hipótesis | Supervivientes |
 |---|---:|---:|---:|
@@ -24,26 +29,46 @@ con hasta 25 años de datos reales:
 | EURUSD-OTC de IQ Option | 20.000 velas | 72 | **0** |
 | Cripto stop/objetivo 2:1 | 7 activos × 4 horizontes | ~60 | **0** |
 
-Ninguna ventaja sobrevivió a los costes de operar. El mejor candidato de cripto
-bate a un control ingenuo por ~2 puntos de winrate de forma consistente — un
-efecto momentum probablemente real — pero operarlo cuesta ~4 puntos.
+Ninguna ventaja sobrevivió a los costes de operar. **Ese es el resultado
+publicado**, y también la demostración de que el instrumento funciona: un
+backtester que produce estrategias ganadoras a demanda no está midiendo, está
+generando ruido bonito.
 
-**[→ Informe completo con metodología, datos y cómo reproducirlo](INFORME.md)**
+### El dato que resume el problema
 
-Un resultado negativo obtenido con rigor es más útil que uno positivo obtenido
-sin él, porque el segundo cuesta dinero. Lo que queda es el instrumento de
-medición, y eso es lo que documenta el resto de este README.
+La misma regla, sobre el mismo activo, según cuántos datos se miren:
+
+| Muestra | Winrate | Edge |
+|---|---:|---:|
+| 12.468 velas (2 años) | 56,36% | **+2,01%** |
+| 36.565 velas (6 años) | 53,48% | −0,87% |
+| 149.617 velas (25 años) | 52,81% | −1,54% |
+
+No cambió la estrategia ni el mercado. Cambió cuánto se miraba. Con dos años de
+datos, esa regla parece un sistema ganador y justifica poner dinero; con
+veinticinco, es una pérdida lenta.
+
+**[→ Informe completo: metodología, resultados y cómo reproducirlo](INFORME.md)**
 
 ---
 
-## Qué es y qué no es
+## Las cuatro trampas, y cómo se cierran
 
-**Qué es:** un sistema que convierte reglas técnicas en decisiones deterministas
-y auditables, y que mide con honestidad si esas reglas tienen ventaja real.
+| Trampa | Qué hace Kronos | Test que lo fija |
+|---|---|---|
+| **Look-ahead**: el indicador usa datos que en ese momento no existían | El valor en `i` solo depende de datos `<= i`; la estrategia recibe únicamente `series[:i+1]` | `test_sin_look_ahead`, `test_la_estrategia_solo_ve_el_pasado` |
+| **Coste ignorado**: evaluar como si operar fuese gratis | Spread modelado siempre, por defecto 0,5 pips y nunca cero; siempre en contra | `test_slippage_empeora_el_resultado` |
+| **Dragado de datos**: quedarse con la mejor de cien pruebas | Corrección de Bonferroni sobre el número real de hipótesis + validación fuera de muestra obligatoria | `tests/test_research.py` |
+| **Sin control**: un winrate sin nada con que compararlo | Catálogo con *siempre CALL*, *siempre PUT* y *moneda al aire* | `tests/test_research.py` |
 
-**Qué no es:** una promesa de rentabilidad. El proyecto está construido, de
-hecho, para lo contrario: para demostrarte con números si tu estrategia no
-funciona, antes de que lo descubras con dinero.
+Un quinto, propio del backtest con stops: dentro de una vela OHLC no se sabe si
+el máximo llegó antes que el mínimo. Si en la misma vela caben stop y objetivo,
+Kronos cuenta **STOP**. Asumir lo contrario infla los resultados y es la causa
+número uno de sistemas que lucen bien en el histórico y no se reproducen.
+
+**Omisión deliberada:** no hay optimizador de parámetros. Una rejilla sobre 15
+umbrales encuentra siempre una combinación que brilla en el histórico y casi
+nunca fuera de él. Añadirlo habría hecho el proyecto más vendible y menos útil.
 
 La demo lo enseña en diez segundos. Corre el pipeline entero sobre una serie
 sintética y termina así:
@@ -438,10 +463,9 @@ sin fundamento. Estas garantías están cubiertas por tests, no solo prometidas:
 python -m kronos selftest        # 359 tests, ~60 s, sin red
 ```
 
-**Omisión deliberada:** no hay optimizador de parámetros. Una rejilla sobre 15
-umbrales encuentra siempre una combinación que brilla en el histórico, y casi
-nunca fuera de él. Si ajustas parámetros, hazlo a mano y valida cada cambio con
-`kronos validar`.
+Como no hay optimizador de parámetros y no va a haberlo, si ajustas umbrales
+hazlo a mano y valida cada cambio con `kronos validar`. Un cambio que mejora el
+backtest y empeora el tramo fuera de muestra es sobreajuste, no una mejora.
 
 ---
 
