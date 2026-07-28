@@ -1,0 +1,1 @@
+"""Subpaquete backtest de Kronos."""

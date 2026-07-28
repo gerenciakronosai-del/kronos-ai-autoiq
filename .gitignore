@@ -1,0 +1,26 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+.env
+
+# Credenciales del broker: nunca en el repositorio.
+# Se leen de IQ_EMAIL / IQ_PASSWORD como variables de entorno.
+*.credentials
+secrets.json
+
+# Permisos locales de Claude Code: contienen rutas de la maquina.
+.claude/settings.local.json
+
+# Datos de mercado y resultados.
+#
+# Se ignora data/ entera, no solo por peso (~114 MB): la licencia de HistData no
+# permite redistribuir sus ficheros, y los registros de decisiones son del bot de
+# cada cual. El importador los reconstruye desde la fuente original.
+data/*
+!data/.gitkeep
+resultados/
+*.log

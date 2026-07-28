@@ -1,0 +1,1 @@
+"""Subpaquete strategy de Kronos."""

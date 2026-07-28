@@ -1,0 +1,23 @@
+{
+  "estrategia": "confluence",
+  "parametros_estrategia": {},
+  "riesgo": {
+    "balance_inicial": 1000.0,
+    "riesgo_por_operacion": 0.01,
+    "max_perdida_diaria": 0.05,
+    "max_ganancia_diaria": 0.1,
+    "max_operaciones_dia": 20,
+    "max_perdidas_seguidas": 3,
+    "enfriamiento_velas": 10,
+    "balance_minimo": 100.0,
+    "confianza_minima": "MEDIA"
+  },
+  "backtest": {
+    "payout": 0.8,
+    "expiry_velas": 5,
+    "ventana": 150,
+    "slippage_pct": 0.0
+  },
+  "symbol": "EURUSD",
+  "timeframe": 60
+}

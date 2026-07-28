@@ -1,0 +1,16 @@
+# Dependencias OPCIONALES, solo para el panel y el cerebro IA.
+#
+# El nucleo de Kronos (indicadores, estrategia, riesgo, backtest, broker
+# simulado) no necesita nada de esto: sigue funcionando con Python puro.
+# Instala este fichero unicamente si vas a usar `dashboard/app.py` o el
+# modulo `kronos.ia`.
+#
+#     pip install -r requirements-dashboard.txt
+
+anthropic>=0.40          # SDK oficial de la API de Claude
+streamlit>=1.30          # panel web local
+
+# Cliente NO oficial de IQ Option (ingenieria inversa, de Lu-Yi-Hsun).
+# OJO: el paquete "iqoptionapi" de PyPI es otro proyecto distinto y no sirve.
+# Instalacion:
+#   pip install "git+https://github.com/Lu-Yi-Hsun/iqoptionapi.git"

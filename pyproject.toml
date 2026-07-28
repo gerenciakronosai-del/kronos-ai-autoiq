@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kronos-ai-autoiq"
+version = "1.0.0"
+description = "Motor de decision y backtesting para opciones binarias de corto plazo, sin dependencias externas."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+keywords = ["trading", "backtesting", "opciones-binarias", "indicadores-tecnicos"]
+classifiers = [
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Office/Business :: Financial :: Investment",
+    "License :: OSI Approved :: MIT License",
+]
+# Sin dependencias: todo el nucleo es biblioteca estandar. Es una decision de
+# diseno, no una carencia — el proyecto se clona y funciona.
+dependencies = []
+
+[project.optional-dependencies]
+# Cliente comunitario no oficial de IQ Option. No verificado por este proyecto.
+iqoption = ["iqoptionapi"]
+# Panel web y cerebro IA. El nucleo sigue sin dependencias sin esto.
+dashboard = ["anthropic>=0.40", "streamlit>=1.30"]
+
+[project.scripts]
+kronos = "kronos.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["kronos*"]
+
+[tool.setuptools.package-data]
+kronos = ["py.typed"]
