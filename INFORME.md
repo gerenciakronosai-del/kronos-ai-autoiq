@@ -1,3 +1,5 @@
+***Español** · [English](REPORT.en.md)*
+
 # Informe de resultados
 
 Qué se midió, con qué datos, y qué salió. Este documento existe porque la

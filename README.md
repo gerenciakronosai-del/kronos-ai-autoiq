@@ -1,3 +1,5 @@
+***Español** · [English](README.en.md)*
+
 # Kronos AI — AutoIQ
 
 **Un backtester construido para no poder mentirte.**
@@ -460,7 +462,7 @@ sin fundamento. Estas garantías están cubiertas por tests, no solo prometidas:
 | La contabilidad cuadra al céntimo | `test_curva_de_capital_coherente` |
 
 ```bash
-python -m kronos selftest        # 359 tests, ~60 s, sin red
+python -m kronos selftest        # 359 tests, ~47 s, sin red
 ```
 
 Como no hay optimizador de parámetros y no va a haberlo, si ajustas umbrales
