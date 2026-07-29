@@ -9,7 +9,7 @@ esas reglas tienen ventaja real. El valor del proyecto no está en la estrategia
 ## Comandos
 
 ```bash
-python -m kronos selftest      # 359 tests, ~60 s, sin red
+python -m kronos selftest      # 409 tests, ~57 s, sin red
 python -m kronos demo          # pipeline completo de extremo a extremo
 ```
 

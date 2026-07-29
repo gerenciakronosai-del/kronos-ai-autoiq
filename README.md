@@ -11,11 +11,11 @@ corregir por ello, y no comparan contra ningún control. Este repositorio
 convierte esas cuatro trampas en tests automatizados que fallan si alguien las
 reintroduce.
 
-Python 3.11+ puro, **cero dependencias externas**, 359 tests.
+Python 3.11+ puro, **cero dependencias externas**, 409 tests.
 
 ```bash
 git clone <repo> && cd kronos-ai-autoiq
-python -m kronos selftest    # 359 tests, ~47 s, sin red
+python -m kronos selftest    # 409 tests, ~57 s, sin red
 python -m kronos demo        # pipeline completo de extremo a extremo
 ```
 
@@ -98,6 +98,46 @@ No por mala suerte — por diseño del instrumento. La mayoría de sistemas que
 Por eso ninguna salida de Kronos muestra el winrate a secas. Siempre aparece
 junto al umbral, el *edge* (winrate − umbral) y un contraste estadístico que
 responde a la única pregunta que importa: **¿esto es ventaja o es ruido?**
+
+---
+
+## Kronos Studio: definir una estrategia sin escribir código
+
+```bash
+pip install -r requirements-dashboard.txt
+streamlit run dashboard/estudio.py
+```
+
+Un banco de pruebas donde se construye una estrategia con reglas —`SI rsi < 35 Y
+adx < 25 -> CALL`— se lanza contra datos reales y se recibe un veredicto que
+aplica los cinco filtros. Las estrategias son datos, no código: se exportan a
+JSON, se comparten y se vuelven a cargar.
+
+Los once canales disponibles salen de `python -c "from kronos.research.reglas
+import catalogo; print(catalogo())"`. Cada uno se compara con `<`, `>`, `<=`,
+`>=`, `cruza_arriba` o `cruza_abajo`, y varias condiciones dentro de una regla
+se cumplen a la vez.
+
+### El contador de intentos
+
+Es la decisión de diseño que separa esto de cualquier otro backtester con
+interfaz. Un barrido corrige por las hipótesis que prueba a la vez; una interfaz
+tiene el problema contrario y peor:
+
+> Defines una estrategia, no te gusta el resultado, mueves un umbral y vuelves a
+> probar. Cuarenta veces.
+
+Estadísticamente eso son cuarenta hipótesis contra los mismos datos, y la mejor
+de las cuarenta se ve estupenda por puro azar. Que se prueben de una en una no lo
+cambia: solo lo esconde.
+
+**Kronos Studio lleva la cuenta y la aplica.** El p-valor exigido se multiplica
+por el número de evaluaciones que llevas contra ese conjunto de datos, el
+contador está a la vista, y el historial de la sesión se muestra entero. Probar
+mucho es legítimo; hacerlo gratis, no.
+
+El contador se puede reiniciar, pero solo tiene sentido con datos que no hayas
+mirado antes — que es justo el punto.
 
 ---
 
@@ -306,7 +346,7 @@ python -m kronos broker      --symbol EURUSD    # diagnóstico de conexión IQ O
 python -m kronos indicadores --data velas.csv   # volcado de indicadores
 python -m kronos datos       --out velas.csv    # genera serie sintética
 python -m kronos config-init                    # escribe config/default.json
-python -m kronos selftest                       # 359 tests
+python -m kronos selftest                       # 409 tests
 ```
 
 ### De dónde sacar histórico real
@@ -462,7 +502,7 @@ sin fundamento. Estas garantías están cubiertas por tests, no solo prometidas:
 | La contabilidad cuadra al céntimo | `test_curva_de_capital_coherente` |
 
 ```bash
-python -m kronos selftest        # 359 tests, ~47 s, sin red
+python -m kronos selftest        # 409 tests, ~57 s, sin red
 ```
 
 Como no hay optimizador de parámetros y no va a haberlo, si ajustas umbrales

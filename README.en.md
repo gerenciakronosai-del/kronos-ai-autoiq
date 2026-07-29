@@ -11,11 +11,11 @@ correcting for that, and it compares against nothing. This repository turns
 those four failure modes into automated tests that break if anyone reintroduces
 them.
 
-Pure Python 3.11+, **zero external dependencies**, 359 tests.
+Pure Python 3.11+, **zero external dependencies**, 409 tests.
 
 ```bash
 git clone <repo> && cd kronos-ai-autoiq
-python -m kronos selftest    # 359 tests, ~47 s, no network
+python -m kronos selftest    # 409 tests, ~57 s, no network
 python -m kronos demo        # full end-to-end pipeline
 ```
 
@@ -106,6 +106,45 @@ That's why no Kronos output ever shows a win rate on its own. It always appears
 next to the breakeven threshold, the *edge* (win rate − threshold) and a
 statistical test answering the only question that matters: **is this an edge or
 is it noise?**
+
+---
+
+## Kronos Studio: define a strategy without writing code
+
+```bash
+pip install -r requirements-dashboard.txt
+streamlit run dashboard/estudio.py
+```
+
+A test bench where you build a strategy out of rules — `IF rsi < 35 AND adx < 25
+-> CALL` — run it against real data, and get a verdict that applies all five
+filters. Strategies are data, not code: export to JSON, share, load back.
+
+The eleven available channels come from `python -c "from kronos.research.reglas
+import catalogo; print(catalogo())"`. Each is compared with `<`, `>`, `<=`, `>=`,
+`cruza_arriba` or `cruza_abajo`, and several conditions inside one rule must hold
+simultaneously.
+
+### The attempt counter
+
+This is the design decision that separates it from any other backtester with a
+UI. A sweep corrects for the hypotheses it tries at once; a UI has the opposite
+and worse problem:
+
+> You define a strategy, don't like the result, move a threshold and try again.
+> Forty times.
+
+Statistically those are forty hypotheses against the same data, and the best of
+the forty looks great by pure chance. Trying them one at a time doesn't change
+that — it only hides it.
+
+**Kronos Studio counts and applies it.** The required p-value is multiplied by
+the number of evaluations you've run against that dataset, the counter is on
+screen, and the full session history is shown. Testing a lot is legitimate;
+doing it for free is not.
+
+The counter can be reset, but that only makes sense with data you haven't looked
+at before — which is precisely the point.
 
 ---
 
@@ -317,7 +356,7 @@ python -m kronos broker      --symbol EURUSD     # IQ Option connection diagnost
 python -m kronos indicadores --data candles.csv  # indicator dump
 python -m kronos datos       --out candles.csv   # generate synthetic series
 python -m kronos config-init                     # write config/default.json
-python -m kronos selftest                        # 359 tests
+python -m kronos selftest                        # 409 tests
 ```
 
 ### Where to get real history
@@ -463,7 +502,7 @@ without grounds. These guarantees are covered by tests, not merely promised:
 | The books balance to the cent | `test_curva_de_capital_coherente` |
 
 ```bash
-python -m kronos selftest        # 359 tests, ~47 s, no network
+python -m kronos selftest        # 409 tests, ~57 s, no network
 ```
 
 Since there is no parameter optimiser and there won't be one, if you tune
