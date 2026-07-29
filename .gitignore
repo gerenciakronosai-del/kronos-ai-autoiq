@@ -24,3 +24,6 @@ data/*
 !data/.gitkeep
 resultados/
 *.log
+
+# Estrategias guardadas por el usuario desde Kronos Studio.
+estrategias/

@@ -27,6 +27,15 @@ import streamlit as st
 
 from kronos.core.candle import Series
 from kronos.data import loader
+from kronos.research import biblioteca
+from kronos.research.grafico import curva_svg, leyenda_svg, precio_svg
+from kronos.research.curva import (
+    Operacion,
+    analizar_curva,
+    curva_de_capital,
+    operaciones_binarias,
+    operaciones_stops,
+)
 from kronos.research.reglas import (
     CANALES,
     OPERADORES,
@@ -35,6 +44,9 @@ from kronos.research.reglas import (
     Regla,
 )
 from kronos.research.veredicto import MIN_OPERACIONES, evaluar_estrategia
+
+DIR_ESTRATEGIAS = RAIZ / "estrategias"
+
 
 st.set_page_config(page_title="Kronos Studio", page_icon="K", layout="wide",
                    initial_sidebar_state="expanded")
@@ -130,11 +142,23 @@ with st.sidebar:
         st.caption(f"Umbral sin coste: **{100 / (1 + rr):.2f}%** "
                    "(el coste lo sube; se calcula al evaluar)")
 
-    spread = st.number_input("Coste por operacion (pips)", 0.0, 100.0, 0.5, 0.1,
+    spread = st.number_input("Coste por operacion (pips)", 0.0, 500.0, 0.5, 0.1,
                              help="Nunca lo pongas a cero. Evaluar sin coste "
                                   "fabrica ganadores que no existen.")
     if spread == 0:
         st.warning("Con coste cero, cualquier resultado positivo es ficticio.")
+
+    # En forex un pip es 0.0001 fijo. En cripto no existe tal cosa: BTC a 60.000
+    # y ADA a 0.40 no comparten escala, asi que se usa un punto basico del precio.
+    ultimo = ST.serie.closes[-1] if ST.serie is not None else 1.0
+    vp = 0.0001 if ultimo < 10.0 else ultimo * 0.0001
+    if ST.serie is not None:
+        st.caption(f"1 pip = {vp:g} ({'forex' if ultimo < 10 else 'punto basico'}). "
+                   f"Coste total: **{spread * vp:g}** por operacion.")
+        if ultimo >= 10.0 and spread < 10:
+            st.warning("En cripto la comision tipica (0,2% taker) equivale a unos "
+                       "20 pips. Con 0,5 estas midiendo un mercado que no existe.")
+
     split = st.slider("Reparto dentro / fuera de muestra", 0.3, 0.8, 0.6, 0.05)
 
 
@@ -217,10 +241,8 @@ with izq:
 
 with der:
     st.subheader("Intentos sobre estos datos")
+    hueco_intentos = st.empty()   # se rellena al final del script
     n_int = intentos_actuales()
-    st.metric("Evaluaciones", n_int,
-              help="Cada evaluacion contra los mismos datos multiplica el "
-                   "p-valor exigido. Es la correccion de Bonferroni.")
     if n_int >= 20:
         st.error(f"Llevas {n_int} intentos. El p-valor se multiplica por {n_int}: "
                  "a estas alturas hace falta un edge enorme para ser creible. "
@@ -248,6 +270,24 @@ with der:
         except ValueError as e:
             st.error(str(e))
 
+    st.subheader("Biblioteca")
+    guardadas = biblioteca.listar(DIR_ESTRATEGIAS)
+    if not guardadas:
+        st.caption("Vacia. Evalua una estrategia y guardala para reutilizarla "
+                   "en otra sesion.")
+    for e in guardadas:
+        marca = {True: "SOBREVIVIO", False: "descartada", None: "sin evaluar"}[e.sobrevivio]
+        b1, b2, b3 = st.columns([6, 2, 1])
+        b1.markdown(f"**{e.estrategia.nombre}**  \n`{e.fecha} · {marca}`")
+        if b2.button("Cargar", key=f"load{e.nombre}", use_container_width=True):
+            ST.reglas = [r.a_dict() for r in e.estrategia.reglas]
+            ST.pendientes = []
+            st.success(f"Cargada: {e.estrategia.nombre}")
+            st.rerun()
+        if b3.button("X", key=f"rm{e.nombre}", help="Borrar"):
+            biblioteca.borrar(e.nombre, DIR_ESTRATEGIAS)
+            st.rerun()
+
 
 # --------------------------------------------------------------------- #
 # Evaluacion
@@ -267,7 +307,7 @@ if st.button("Evaluar", type="primary", disabled=not listo, use_container_width=
             rr=float(rr) if rr else 2.0,
             atr_mult=float(atr_mult) if atr_mult else 1.5,
             max_velas=int(max_velas) if max_velas else 48,
-            spread_pips=float(spread),
+            spread_pips=float(spread), valor_pip=vp,
         )
         ST.historial.append((nombre, v.superviviente, v.dentro.edge))
 
@@ -289,7 +329,70 @@ if st.button("Evaluar", type="primary", disabled=not listo, use_container_width=
         for motivo in v.motivos():
             st.warning(motivo)
 
+        # --- Operaciones y curva, sobre la serie completa --------------- #
+        sen_todas = est.senales(ST.serie)
+        if modo == "binarias":
+            ops = operaciones_binarias(
+                ST.serie, sen_todas, expiry=int(expiry), payout=float(payout),
+                spread_pips=float(spread), valor_pip=vp)
+        else:
+            ops = operaciones_stops(
+                ST.serie, sen_todas, rr=float(rr), atr_mult=float(atr_mult),
+                max_velas=int(max_velas), spread_pips=float(spread), valor_pip=vp)
+
+        ST.ultimas_ops = ops
+        ST.ultimo_veredicto = v
+
+        if ops:
+            curva = curva_de_capital(ops, capital_inicial=1000.0,
+                                     riesgo_por_operacion=0.01)
+            r = analizar_curva(curva)
+
+            st.subheader("Curva de capital")
+            st.caption("Riesgo fijo del 1% del capital inicial por operacion. "
+                       "Sin progresion ni interes compuesto: la curva ensenya el "
+                       "rendimiento de la estrategia, no el del apalancamiento.")
+            st.markdown(curva_svg(curva), unsafe_allow_html=True)
+
+            g1, g2, g3 = st.columns(3)
+            g1.metric("Capital final", f"{curva[-1]:,.2f}",
+                      f"{(curva[-1] / curva[0] - 1) * 100:+.2f}%")
+            g2.metric("Peor caida", f"{r.max_drawdown * 100:.2f}%",
+                      f"de {r.pico:,.0f} a {r.valle:,.0f}", delta_color="off")
+            g3.metric("Perdidas seguidas", r.perdidas_seguidas,
+                      "aguantarias esa racha?", delta_color="off")
+
+            st.subheader("Donde entro cada operacion")
+            n_velas = len(ST.serie)
+            ancho = st.slider("Velas a mostrar", 100, min(2000, n_velas),
+                              min(400, n_velas), 50)
+            fin = st.slider("Desplazamiento", ancho, n_velas, n_velas, 10)
+            st.markdown(precio_svg(ST.serie.closes, ops, fin - ancho, fin),
+                        unsafe_allow_html=True)
+            st.markdown(leyenda_svg(), unsafe_allow_html=True)
+            st.caption("Verde ganada, rojo perdida. El circulo es CALL y el "
+                       "cuadrado PUT. Pasa el raton por encima para el detalle.")
+        else:
+            st.info("La estrategia no genero ninguna operacion cerrada. "
+                    "Suele significar que las condiciones son demasiado "
+                    "estrictas o que el horizonte es corto.")
+
         st.code(v.informe(), language=None)
+
+        # --- Guardar en la biblioteca ---------------------------------- #
+        if st.button("Guardar en la biblioteca", use_container_width=True):
+            try:
+                ruta = biblioteca.guardar(est, DIR_ESTRATEGIAS, veredicto={
+                    "superviviente": v.superviviente,
+                    "edge": v.dentro.edge,
+                    "n": v.dentro.n,
+                    "p_corregido": v.p_corregido,
+                    "modo": modo,
+                    "datos": clave_actual(),
+                })
+                st.success(f"Guardada como `{ruta.name}`")
+            except biblioteca.BibliotecaError as e:
+                st.error(str(e))
 
     except Exception as e:
         st.error(f"{type(e).__name__}: {e}")
@@ -310,3 +413,9 @@ if ST.historial:
     for i, (nom, sobrevive, edge) in enumerate(reversed(ST.historial), 1):
         marca = "SOBREVIVE" if sobrevive else "descartada"
         st.text(f"{len(ST.historial) - i + 1:>3}. {nom:<30} {edge * 100:+6.2f}%  {marca}")
+
+# El contador se pinta el ultimo, cuando ya refleja la evaluacion de esta pasada.
+hueco_intentos.metric(
+    "Evaluaciones", intentos_actuales(),
+    help="Cada evaluacion contra los mismos datos multiplica el p-valor "
+         "exigido. Es la correccion de Bonferroni.")
