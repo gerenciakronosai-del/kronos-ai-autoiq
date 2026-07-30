@@ -77,10 +77,14 @@ def copiar_demo(destino: Path) -> int:
             shutil.copyfile(origen, destino)
             return destino.stat().st_size
 
-    # Sin datos reales a mano, se genera una serie sintetica reproducible.
+    # Sin datos reales a mano —el caso de la integracion continua, donde data/
+    # no se versiona— se genera una serie sintetica reproducible. Es un paseo
+    # aleatorio, asi que la app arranca ensenyando lo que debe ensenyar: que ahi
+    # no hay ventaja ninguna.
     sys.path.insert(0, str(RAIZ))
     from kronos.data import loader, synthetic
-    serie = synthetic.generar(n=1500, symbol="DEMO", seed=42)
+    serie = synthetic.generate(
+        synthetic.SyntheticParams(n=3000, timeframe=86400), seed=42, symbol="DEMO")
     loader.save_csv(serie, destino)
     return destino.stat().st_size
 

@@ -1,0 +1,61 @@
+# Publica Kronos Studio en GitHub Pages.
+#
+# La PWA se construye aqui y no se versiona: `pwa/kronos.zip` y `pwa/demo.csv`
+# estan en .gitignore porque son artefactos derivados. Reconstruirlos en cada
+# despliegue garantiza que lo publicado corresponde al codigo del commit, sin
+# depender de que alguien se acuerde de ejecutar el empaquetador antes de subir.
+#
+# Los tests corren antes de desplegar. Si el motor esta roto, no se publica.
+
+name: Publicar la PWA
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:          # permite lanzarlo a mano desde la pestanya Actions
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Un despliegue a la vez. No se cancelan los que ya estan en marcha: terminar
+# una publicacion a medias dejaria el sitio en un estado incoherente.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  construir:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Bateria de tests
+        run: python -m kronos selftest
+
+      - name: Empaquetar el motor para el navegador
+        run: python construir_pwa.py
+
+      - name: Comprobar que la PWA quedo bien formada
+        run: python -m unittest tests.test_pwa -v
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: pwa
+
+  desplegar:
+    needs: construir
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.despliegue.outputs.page_url }}
+    steps:
+      - id: despliegue
+        uses: actions/deploy-pages@v4
