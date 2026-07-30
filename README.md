@@ -52,6 +52,8 @@ veinticinco, es una pérdida lenta.
 
 **[→ Informe completo: metodología, resultados y cómo reproducirlo](INFORME.md)**
 
+**[→ Bitácora: todo lo que se hizo, en orden, con los errores incluidos](BITACORA.md)**
+
 ---
 
 ## Las cuatro trampas, y cómo se cierran
