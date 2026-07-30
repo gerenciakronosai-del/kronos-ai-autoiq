@@ -5,10 +5,16 @@
       "name": "kronos-dashboard",
       "runtimeExecutable": "python",
       "runtimeArgs": [
-        "-m", "streamlit", "run", "dashboard/app.py",
-        "--server.port", "8501",
-        "--server.headless", "true",
-        "--browser.gatherUsageStats", "false"
+        "-m",
+        "streamlit",
+        "run",
+        "dashboard/app.py",
+        "--server.port",
+        "8501",
+        "--server.headless",
+        "true",
+        "--browser.gatherUsageStats",
+        "false"
       ],
       "port": 8501
     },
@@ -16,12 +22,30 @@
       "name": "kronos-studio",
       "runtimeExecutable": "python",
       "runtimeArgs": [
-        "-m", "streamlit", "run", "dashboard/estudio.py",
-        "--server.port", "8502",
-        "--server.headless", "true",
-        "--browser.gatherUsageStats", "false"
+        "-m",
+        "streamlit",
+        "run",
+        "dashboard/estudio.py",
+        "--server.port",
+        "8502",
+        "--server.headless",
+        "true",
+        "--browser.gatherUsageStats",
+        "false"
       ],
       "port": 8502
+    },
+    {
+      "name": "kronos-pwa",
+      "runtimeExecutable": "python",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8503",
+        "--directory",
+        "pwa"
+      ],
+      "port": 8503
     }
   ]
 }

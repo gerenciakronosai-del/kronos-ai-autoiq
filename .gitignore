@@ -27,3 +27,7 @@ resultados/
 
 # Estrategias guardadas por el usuario desde Kronos Studio.
 estrategias/
+
+# Artefactos generados por construir_pwa.py: se reconstruyen con un comando.
+pwa/kronos.zip
+pwa/demo.csv

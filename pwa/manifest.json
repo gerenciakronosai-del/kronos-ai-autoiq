@@ -1,0 +1,27 @@
+{
+  "name": "Kronos Studio",
+  "short_name": "Kronos",
+  "description": "Comprueba si tu estrategia de trading tiene ventaja real. Todo el calculo ocurre en tu dispositivo; no ejecuta operaciones.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#12161c",
+  "theme_color": "#12161c",
+  "lang": "es",
+  "categories": ["finance", "productivity", "utilities"],
+  "icons": [
+    {
+      "src": "icono.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icono-maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

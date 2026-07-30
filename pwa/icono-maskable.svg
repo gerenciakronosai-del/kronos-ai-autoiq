@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" role="img" aria-label="Kronos Studio">
+  <rect width="192" height="192" fill="#12161c"/>
+  <polyline points="52,126 72,106 90,117 112,76 130,93 148,62"
+            fill="none" stroke="#2E86DE" stroke-width="8"
+            stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="112" cy="76" r="7.5" fill="#27AE60"/>
+  <circle cx="72" cy="106" r="7.5" fill="#E74C3C"/>
+</svg>

@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#12161c">
+<meta name="description" content="Comprueba si tu estrategia de trading tiene ventaja real. Todo el calculo ocurre en tu dispositivo.">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icono.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icono.svg">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Kronos Studio</title>
+<link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+
+<header class="cabecera">
+  <h1>Kronos <span>Studio</span></h1>
+  <p class="lema">Comprueba si tu estrategia tiene ventaja real.</p>
+</header>
+
+<div id="arranque" class="arranque">
+  <div class="girador" aria-hidden="true"></div>
+  <p id="arranque-texto">Cargando el motor…</p>
+  <p class="arranque-nota">La primera vez descarga Python (unos 10 MB).
+     Después funciona sin conexión.</p>
+</div>
+
+<main id="app" hidden>
+
+  <!-- 1. Datos ---------------------------------------------------------- -->
+  <section class="tarjeta">
+    <h2><span class="paso">1</span> Datos</h2>
+    <div class="fila">
+      <button id="btn-demo" class="secundario">Usar datos de ejemplo</button>
+      <label class="boton secundario" for="fichero">Cargar mi CSV</label>
+      <input type="file" id="fichero" accept=".csv,text/csv" hidden>
+    </div>
+    <p id="info-datos" class="apunte">Sin datos cargados.</p>
+    <p class="apunte tenue">
+      Tu fichero no sale del dispositivo: el análisis ocurre aquí, en el navegador.
+    </p>
+  </section>
+
+  <!-- 2. Cómo se evalúa -------------------------------------------------- -->
+  <section class="tarjeta">
+    <h2><span class="paso">2</span> Cómo se evalúa</h2>
+
+    <div class="segmentado" role="radiogroup" aria-label="Modo de evaluacion">
+      <button class="activo" data-modo="binarias" role="radio" aria-checked="true">Opciones binarias</button>
+      <button data-modo="stops" role="radio" aria-checked="false">Stop y objetivo</button>
+    </div>
+
+    <div id="campos-binarias">
+      <label>Payout del bróker
+        <input type="number" id="payout" value="0.84" min="0.1" max="0.99" step="0.01">
+      </label>
+      <label>Vencimiento (velas)
+        <input type="number" id="expiry" value="5" min="1" max="200" step="1">
+      </label>
+    </div>
+
+    <div id="campos-stops" hidden>
+      <label>Objetivo : riesgo
+        <input type="number" id="rr" value="2" min="0.2" max="10" step="0.1">
+      </label>
+      <label>Stop (múltiplos de ATR)
+        <input type="number" id="atrmult" value="1.5" min="0.2" max="10" step="0.1">
+      </label>
+      <label>Horizonte máximo (velas)
+        <input type="number" id="maxvelas" value="48" min="2" max="500" step="1">
+      </label>
+    </div>
+
+    <label>Coste por operación (pips)
+      <input type="number" id="spread" value="0.5" min="0" max="500" step="0.1">
+    </label>
+    <p id="aviso-umbral" class="apunte"></p>
+    <p id="aviso-coste" class="aviso" hidden></p>
+  </section>
+
+  <!-- 3. Reglas ---------------------------------------------------------- -->
+  <section class="tarjeta">
+    <h2><span class="paso">3</span> Reglas</h2>
+
+    <ul id="lista-reglas" class="lista"></ul>
+    <p id="sin-reglas" class="apunte">Sin reglas todavía. Añade la primera abajo.</p>
+
+    <div class="constructor">
+      <div class="fila">
+        <label class="crece">Canal
+          <select id="canal"></select>
+        </label>
+        <label>Periodo
+          <input type="number" id="periodo" min="1" max="500" step="1">
+        </label>
+      </div>
+      <div class="fila">
+        <label class="crece">Operador
+          <select id="operador"></select>
+        </label>
+        <label class="crece">Valor
+          <input type="number" id="valor" step="any">
+        </label>
+      </div>
+      <p id="ayuda-canal" class="apunte tenue"></p>
+      <button id="btn-condicion" class="secundario ancho">Añadir condición</button>
+    </div>
+
+    <div id="pendientes-caja" hidden>
+      <p class="apunte"><strong>Condiciones de la regla en curso</strong> (se cumplen a la vez)</p>
+      <ul id="lista-pendientes" class="lista"></ul>
+      <div class="fila">
+        <button id="btn-call" class="call crece">Crear regla → CALL</button>
+        <button id="btn-put" class="put crece">Crear regla → PUT</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Intentos ----------------------------------------------------------- -->
+  <section class="tarjeta">
+    <h2>Intentos sobre estos datos</h2>
+    <p class="contador"><span id="intentos">0</span> <small>evaluaciones</small></p>
+    <p class="apunte tenue">
+      Cada evaluación contra los mismos datos multiplica el p-valor exigido.
+      Probar mucho es legítimo; hacerlo gratis, no.
+    </p>
+    <p id="aviso-intentos" class="aviso" hidden></p>
+    <button id="btn-reiniciar" class="tenue-boton" hidden>Reiniciar contador</button>
+  </section>
+
+  <!-- Evaluar ------------------------------------------------------------ -->
+  <div class="acciones">
+    <input type="text" id="nombre" placeholder="Nombre de la estrategia" value="Sin nombre">
+    <button id="btn-evaluar" class="principal ancho" disabled>Evaluar</button>
+    <p id="falta" class="apunte"></p>
+  </div>
+
+  <!-- Resultado ---------------------------------------------------------- -->
+  <section id="resultado" hidden></section>
+
+  <!-- Biblioteca --------------------------------------------------------- -->
+  <section class="tarjeta">
+    <h2>Biblioteca</h2>
+    <ul id="lista-biblioteca" class="lista"></ul>
+    <p id="sin-biblioteca" class="apunte tenue">
+      Vacía. Evalúa una estrategia y guárdala para reutilizarla.
+    </p>
+  </section>
+
+  <footer class="pie">
+    <p>Software educativo y de investigación. <strong>No ejecuta operaciones
+       ni mueve dinero.</strong> Nada aquí es asesoramiento financiero.</p>
+    <p class="tenue">Todo el cálculo ocurre en tu dispositivo. No se envía nada
+       a ningún servidor.</p>
+  </footer>
+</main>
+
+<script src="https://cdn.jsdelivr.net/pyodide/v0.28.3/full/pyodide.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

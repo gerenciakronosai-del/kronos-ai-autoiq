@@ -3,7 +3,7 @@
 Todo lo que se ha hecho, en orden, con lo que salió bien y lo que salió mal.
 Este documento se actualiza cada vez que el proyecto cambia.
 
-**Última actualización:** 28 de julio de 2026 · commit `ee702bb` · 469 tests
+**Última actualización:** 29 de julio de 2026 · commit `081d953` · 488 tests
 
 ---
 
@@ -17,10 +17,11 @@ Este documento se actualiza cada vez que el proyecto cambia.
 6. [Cambio de terreno: stops y cripto](#6-cambio-de-terreno-stops-y-cripto)
 7. [El cierre y la publicación](#7-el-cierre-y-la-publicación)
 8. [Kronos Studio](#8-kronos-studio)
-9. [Estado actual](#9-estado-actual)
-10. [Invariantes que no se tocan](#10-invariantes-que-no-se-tocan)
-11. [Errores cometidos](#11-errores-cometidos)
-12. [Pendiente](#12-pendiente)
+9. [La PWA](#9-la-pwa)
+10. [Estado actual](#10-estado-actual)
+11. [Invariantes que no se tocan](#11-invariantes-que-no-se-tocan)
+12. [Errores cometidos](#12-errores-cometidos)
+13. [Pendiente](#13-pendiente)
 
 ---
 
@@ -36,7 +37,7 @@ asesor autorizado. Lo que sí se podía hacer —y se hizo— es construir el so
 que responde la pregunta de debajo: *¿tiene ventaja esta estrategia, sí o no?*
 
 A partir de ahí el encargo fue de autonomía total: «que el proyecto quede de 0 a
-100». El resultado es un repositorio de ~11.800 líneas con 469 tests.
+100». El resultado es un repositorio de ~14.000 líneas con 488 tests.
 
 ---
 
@@ -290,13 +291,51 @@ además se pueden testear sin navegador.
 
 ---
 
-## 9. Estado actual
+## 9. La PWA
+
+Se estudió publicar en App Store y Play Store. Conclusión: **las opciones
+binarias están prohibidas por categoría en Google Play**, y Apple exige que las
+apps de trading de valores las publique la entidad financiera autorizada. Además
+lo que había era Streamlit, que no es una app móvil y no puede llegar a serlo
+sin reescribir la interfaz entera.
+
+Se eligió **PWA**: instalable desde el navegador, sin tiendas, sin comisiones,
+sin revisión. Y una decisión de arquitectura que el proyecto llevaba preparando
+sin saberlo:
+
+**El motor corre dentro del navegador, sobre Pyodide.** `kronos` es Python puro
+sin dependencias —restricción que costó trabajo mantener— y eso es exactamente
+lo que permite compilarlo a WebAssembly. Consecuencias:
+
+* **Sin servidor.** Nada que desplegar, nada que pagar, nada que mantener.
+* **Sin envío de datos.** El CSV del usuario no sale de su dispositivo, así que
+  no hay nada que custodiar ni política de privacidad que prometer de más.
+* **Funciona sin conexión** tras la primera carga.
+
+El paquete comprimido pesa **59 KB**. El runtime de Python son ~10 MB que se
+cachean aparte, en su propia caché, para no volver a bajarlos nunca.
+
+Regla que gobierna `pwa/app.js`: **ningún cálculo estadístico vive en
+JavaScript.** Umbrales, p-valores, corrección por intentos y gráficos salen de
+`kronos`, que está cubierto por tests. Reimplementarlos en JS crearía una segunda
+verdad sin tests que la sujete, y la versión que ve el usuario sería justo la no
+verificada.
+
+La app **no ejecuta operaciones ni mueve dinero**, y lo dice en su propia
+interfaz. Es lo único de todo esto que puede ser honesto: vender la medición, no
+la promesa.
+
+---
+
+## 10. Estado actual
 
 ```bash
-python -m kronos selftest      # 469 tests, ~55 s, sin red
+python -m kronos selftest      # 488 tests, ~68 s, sin red
 python -m kronos demo          # pipeline completo
 iniciar_estudio.bat            # Kronos Studio, puerto 8502
 iniciar_panel.bat              # panel del bot, puerto 8501
+python construir_pwa.py        # empaqueta el motor para el navegador
+python -m http.server 8503 --directory pwa    # sirve la PWA
 ```
 
 Comandos: `decide`, `backtest`, `validar`, `explorar`, `cripto`, `descargar`,
@@ -312,10 +351,11 @@ Comandos: `decide`, `backtest`, `validar`, `explorar`, `cripto`, `descargar`,
 | `b1da402` | Versión en inglés del README y del informe |
 | `7bc5a36` | Kronos Studio: estrategias declarativas + veredicto |
 | `ee702bb` | Curva de capital, entradas sobre precio, biblioteca |
+| `081d953` | Esta bitácora |
 
 ---
 
-## 10. Invariantes que no se tocan
+## 11. Invariantes que no se tocan
 
 1. **Sin look-ahead.** El valor en `i` solo depende de datos `<= i`.
 2. **El winrate nunca se muestra solo.**
@@ -333,7 +373,7 @@ Comandos: `decide`, `backtest`, `validar`, `explorar`, `cripto`, `descargar`,
 
 ---
 
-## 11. Errores cometidos
+## 12. Errores cometidos
 
 Se listan porque forman parte del historial real y porque un proyecto que
 presume de no engañarse tampoco debería maquillar esto.
@@ -366,6 +406,11 @@ presume de no engañarse tampoco debería maquillar esto.
 - Dije que el panel arrancaba cuando no arrancaba. El usuario lo señaló
   («Mentira, mira el error del panel») y tenía razón.
 - Di un comando con `&&`, que no funciona en Windows PowerShell 5.1.
+- Escribí `` `load_csv` `` con acentos graves dentro del bloque Python que
+  vive en una plantilla de JavaScript. Eso cerró la plantilla y `app.js`
+  dejó de parsearse **entero, sin ningún error en consola**: la app se quedó
+  en blanco sin pista alguna. Ahora `test_el_bloque_python_no_rompe_la_plantilla`
+  lo impide.
 
 **Conocido y sin arreglar:**
 
@@ -378,9 +423,11 @@ presume de no engañarse tampoco debería maquillar esto.
 
 ---
 
-## 12. Pendiente
+## 13. Pendiente
 
-- `git push` de los dos últimos commits (`7bc5a36`, `ee702bb`).
+- `git push` de todo lo pendiente.
+- Desplegar la PWA en un hosting estático (GitHub Pages sirve y es gratis).
+- Probarla instalada en un móvil real, no solo en el navegador de escritorio.
 - Guardar el histórico de intentos entre sesiones, no solo las estrategias.
 - Traducir esta bitácora al inglés si el repo apunta a público internacional.
 

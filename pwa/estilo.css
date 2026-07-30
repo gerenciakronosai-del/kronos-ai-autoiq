@@ -1,0 +1,207 @@
+/* Kronos Studio - PWA
+   Movil primero. Sin fuentes externas: la app tiene que funcionar sin conexion,
+   y una fuente que no carga desplaza toda la maquetacion. */
+
+:root {
+  --fondo: #12161c;
+  --tarjeta: #1a2029;
+  --borde: #2a3340;
+  --texto: #e6ebf2;
+  --tenue: #8a97a8;
+  --azul: #2E86DE;
+  --verde: #27AE60;
+  --rojo: #E74C3C;
+  --ambar: #E39A0B;
+  --radio: 12px;
+  --mono: ui-monospace, "Cascadia Code", "Consolas", monospace;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --fondo: #f4f6f9;
+    --tarjeta: #ffffff;
+    --borde: #dde3ea;
+    --texto: #1a2029;
+    --tenue: #5f6d7e;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: 0 16px calc(32px + env(safe-area-inset-bottom));
+  background: var(--fondo);
+  color: var(--texto);
+  font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  max-width: 900px;
+  margin-inline: auto;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* --- Cabecera --------------------------------------------------------- */
+.cabecera { padding: 28px 0 8px; }
+.cabecera h1 { margin: 0; font-size: 1.6rem; letter-spacing: -0.02em; }
+.cabecera h1 span { color: var(--azul); }
+.lema { margin: 4px 0 0; color: var(--tenue); font-size: 0.95rem; }
+
+/* --- Arranque --------------------------------------------------------- */
+.arranque { text-align: center; padding: 56px 16px; color: var(--tenue); }
+.arranque p { margin: 8px 0; }
+.arranque-nota { font-size: 0.85rem; opacity: 0.75; }
+.girador {
+  width: 34px; height: 34px; margin: 0 auto 18px;
+  border: 3px solid var(--borde); border-top-color: var(--azul);
+  border-radius: 50%; animation: girar 0.9s linear infinite;
+}
+@keyframes girar { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .girador { animation-duration: 3s; } }
+
+/* --- Tarjetas --------------------------------------------------------- */
+.tarjeta {
+  background: var(--tarjeta);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  padding: 16px;
+  margin: 14px 0;
+}
+.tarjeta h2 {
+  margin: 0 0 12px;
+  font-size: 1rem;
+  display: flex; align-items: center; gap: 9px;
+}
+.paso {
+  display: inline-grid; place-items: center;
+  width: 22px; height: 22px;
+  background: var(--azul); color: #fff;
+  border-radius: 50%; font-size: 0.78rem; font-weight: 700;
+}
+
+/* --- Formularios ------------------------------------------------------ */
+label {
+  display: block;
+  margin: 10px 0;
+  font-size: 0.83rem;
+  color: var(--tenue);
+}
+input[type="number"], input[type="text"], select {
+  display: block; width: 100%; margin-top: 5px;
+  padding: 11px 12px;
+  background: var(--fondo);
+  color: var(--texto);
+  border: 1px solid var(--borde);
+  border-radius: 9px;
+  font: inherit; font-size: 16px;   /* 16px evita que iOS haga zoom al enfocar */
+}
+input:focus-visible, select:focus-visible, button:focus-visible {
+  outline: 2px solid var(--azul); outline-offset: 2px;
+}
+.fila { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+.fila > * { flex: 0 1 auto; }
+.crece { flex: 1 1 130px; }
+
+/* --- Botones ---------------------------------------------------------- */
+button, .boton {
+  display: inline-block;
+  padding: 11px 15px;
+  border: 1px solid var(--borde);
+  border-radius: 9px;
+  background: var(--fondo);
+  color: var(--texto);
+  font: inherit; font-weight: 600;
+  cursor: pointer;
+  min-height: 44px;              /* objetivo tactil comodo */
+  text-align: center;
+}
+button:hover:not(:disabled), .boton:hover { border-color: var(--azul); }
+button:disabled { opacity: 0.45; cursor: not-allowed; }
+.ancho { width: 100%; }
+.principal { background: var(--azul); border-color: var(--azul); color: #fff; }
+.call { background: var(--verde); border-color: var(--verde); color: #fff; }
+.put { background: var(--rojo); border-color: var(--rojo); color: #fff; }
+.tenue-boton { background: none; border: none; color: var(--tenue); font-weight: 400;
+               text-decoration: underline; padding: 6px 0; min-height: 0; }
+
+.segmentado { display: flex; gap: 6px; margin-bottom: 10px; }
+.segmentado button { flex: 1; font-size: 0.88rem; }
+.segmentado .activo { background: var(--azul); border-color: var(--azul); color: #fff; }
+
+/* --- Listas ----------------------------------------------------------- */
+.lista { list-style: none; margin: 0 0 10px; padding: 0; }
+.lista li {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; margin-bottom: 7px;
+  background: var(--fondo);
+  border: 1px solid var(--borde);
+  border-radius: 9px;
+  font-family: var(--mono); font-size: 0.82rem;
+}
+.lista li .txt { flex: 1; word-break: break-word; }
+.lista li button {
+  min-height: 32px; padding: 4px 10px; font-size: 0.8rem; flex: none;
+}
+
+/* --- Textos auxiliares ------------------------------------------------ */
+.apunte { margin: 8px 0 0; font-size: 0.82rem; color: var(--tenue); }
+.tenue { opacity: 0.78; }
+.aviso {
+  margin: 10px 0 0; padding: 10px 12px;
+  border-left: 3px solid var(--ambar);
+  background: color-mix(in srgb, var(--ambar) 12%, transparent);
+  border-radius: 0 8px 8px 0;
+  font-size: 0.83rem;
+}
+.contador { margin: 0; font-size: 2rem; font-weight: 700; line-height: 1.1; }
+.contador small { font-size: 0.85rem; font-weight: 400; color: var(--tenue); }
+
+/* --- Acciones --------------------------------------------------------- */
+.acciones { margin: 18px 0; }
+.acciones input { margin-bottom: 10px; }
+
+/* --- Resultado -------------------------------------------------------- */
+.veredicto {
+  padding: 14px 16px; border-radius: var(--radio);
+  font-weight: 700; text-align: center; margin: 0 0 14px;
+  border: 1px solid;
+}
+.veredicto.si { background: color-mix(in srgb, var(--verde) 16%, transparent);
+                border-color: var(--verde); }
+.veredicto.no { background: color-mix(in srgb, var(--rojo) 16%, transparent);
+                border-color: var(--rojo); }
+
+.metricas { display: grid; gap: 10px; grid-template-columns: repeat(2, 1fr); }
+@media (min-width: 620px) { .metricas { grid-template-columns: repeat(4, 1fr); } }
+.metrica {
+  background: var(--fondo); border: 1px solid var(--borde);
+  border-radius: 9px; padding: 11px;
+}
+.metrica dt { font-size: 0.72rem; color: var(--tenue); margin: 0 0 3px; }
+.metrica dd { margin: 0; font-size: 1.15rem; font-weight: 700; font-family: var(--mono); }
+.metrica .sub { font-size: 0.72rem; font-weight: 400; color: var(--tenue);
+                font-family: inherit; display: block; margin-top: 2px; }
+
+.motivo {
+  margin: 9px 0 0; padding: 10px 12px;
+  border-left: 3px solid var(--rojo);
+  background: color-mix(in srgb, var(--rojo) 10%, transparent);
+  border-radius: 0 8px 8px 0; font-size: 0.85rem;
+}
+
+.grafico { margin: 14px 0 0; overflow-x: auto; }
+.grafico svg { display: block; }
+
+pre {
+  overflow-x: auto; padding: 12px;
+  background: var(--fondo); border: 1px solid var(--borde);
+  border-radius: 9px;
+  font-family: var(--mono); font-size: 0.72rem; line-height: 1.45;
+}
+
+.pie { margin: 28px 0 0; font-size: 0.78rem; color: var(--tenue); }
+.pie p { margin: 6px 0; }
+
+.error {
+  padding: 12px; border-radius: 9px; font-size: 0.85rem;
+  border: 1px solid var(--rojo);
+  background: color-mix(in srgb, var(--rojo) 12%, transparent);
+}
