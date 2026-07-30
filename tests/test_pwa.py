@@ -27,6 +27,14 @@ from pathlib import Path
 RAIZ = Path(__file__).resolve().parent.parent
 PWA = RAIZ / "pwa"
 
+# `kronos.zip` y `demo.csv` son artefactos: los genera `construir_pwa.py` y no se
+# versionan. En un clon recien hecho no existen todavia, asi que los tests que
+# dependen de ellos se saltan en vez de fallar. Quien clone el repositorio no
+# deberia ver un test en rojo por no haber ejecutado un comando que aun no sabe
+# que existe.
+CONSTRUIDA = (PWA / "kronos.zip").exists() and (PWA / "demo.csv").exists()
+NO_CONSTRUIDA = "la PWA no esta construida: ejecuta 'python construir_pwa.py'"
+
 APERTURA = "await py.runPythonAsync(`"
 CIERRE = "`);"
 
@@ -103,6 +111,7 @@ class TestServiceWorker(unittest.TestCase):
             self.assertIn(fichero, sw,
                           f"{fichero} no esta en la precarga: sin conexion faltaria")
 
+    @unittest.skipUnless(CONSTRUIDA, NO_CONSTRUIDA)
     def test_los_ficheros_precacheados_existen(self):
         sw = leer("sw.js")
         for ruta in re.findall(r'"\./([\w.-]+)"', sw):
@@ -113,7 +122,7 @@ class TestServiceWorker(unittest.TestCase):
         self.assertIn("cdn.jsdelivr.net", leer("sw.js"))
 
 
-@unittest.skipUnless((PWA / "kronos.zip").exists(), "kronos.zip no esta construido")
+@unittest.skipUnless(CONSTRUIDA, NO_CONSTRUIDA)
 class TestPaquete(unittest.TestCase):
     def setUp(self):
         self.nombres = zipfile.ZipFile(PWA / "kronos.zip").namelist()

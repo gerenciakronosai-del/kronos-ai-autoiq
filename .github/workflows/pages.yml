@@ -35,13 +35,16 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Bateria de tests
-        run: python -m kronos selftest
-
+      # Se construye ANTES de los tests: `tests/test_pwa.py` valida el paquete
+      # y los ficheros que precachea el service worker, y esos son artefactos
+      # que no se versionan. Al reves, esos tests se saltarian.
       - name: Empaquetar el motor para el navegador
         run: python construir_pwa.py
 
-      - name: Comprobar que la PWA quedo bien formada
+      - name: Bateria de tests
+        run: python -m kronos selftest
+
+      - name: Comprobar que no se salto ningun test de la PWA
         run: python -m unittest tests.test_pwa -v
 
       - uses: actions/configure-pages@v5
