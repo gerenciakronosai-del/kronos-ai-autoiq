@@ -70,7 +70,18 @@ def construir_zip(destino: Path) -> tuple[int, int]:
 
 
 def copiar_demo(destino: Path) -> int:
-    """Datos de ejemplo, para que la app sirva de algo en el primer arranque."""
+    """Datos de ejemplo, para que la app sirva de algo en el primer arranque.
+
+    `pwa/demo.csv` SI se versiona, al contrario que el resto de `data/`: son
+    velas diarias de Binance, cuya API publica no restringe la redistribucion
+    (la de HistData si, y por eso los datos de forex se quedan fuera).
+
+    Si el fichero ya esta, se respeta. Solo se genera cuando falta, que es lo
+    que pasaria en un clon parcial.
+    """
+    if destino.exists() and destino.stat().st_size > 1024:
+        return destino.stat().st_size
+
     for candidato in ("eth_d1.csv", "btc_d1.csv"):
         origen = RAIZ / "data" / candidato
         if origen.exists():
@@ -83,8 +94,18 @@ def copiar_demo(destino: Path) -> int:
     # no hay ventaja ninguna.
     sys.path.insert(0, str(RAIZ))
     from kronos.data import loader, synthetic
+    # Dos parametros elegidos a conciencia:
+    #
+    # * `timeframe=60` porque el generador esta calibrado para que el ATR se
+    #   parezca al de un par FX en velas de un minuto.
+    # * `deriva_tendencia=0` para que sea un paseo aleatorio DE VERDAD. Con la
+    #   deriva por defecto, la semilla 42 cae en un tramo bajista persistente
+    #   (-8.3%): "siempre PUT" acierta el 63% y cualquier regla que compre pierde
+    #   casi siempre. El veredicto seria correcto, pero el primer contacto con la
+    #   app pareceria un fallo en vez de una medicion.
     serie = synthetic.generate(
-        synthetic.SyntheticParams(n=3000, timeframe=86400), seed=42, symbol="DEMO")
+        synthetic.SyntheticParams(n=3000, timeframe=60, deriva_tendencia=0.0),
+        seed=42, symbol="DEMO")
     loader.save_csv(serie, destino)
     return destino.stat().st_size
 
