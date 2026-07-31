@@ -3,7 +3,9 @@
 Todo lo que se ha hecho, en orden, con lo que salió bien y lo que salió mal.
 Este documento se actualiza cada vez que el proyecto cambia.
 
-**Última actualización:** 29 de julio de 2026 · commit `081d953` · 488 tests
+**Última actualización:** 30 de julio de 2026 · commit `a1a6873` · 488 tests
+
+**En producción:** https://gerenciakronosai-del.github.io/kronos-ai-autoiq/
 
 ---
 
@@ -325,6 +327,17 @@ La app **no ejecuta operaciones ni mueve dinero**, y lo dice en su propia
 interfaz. Es lo único de todo esto que puede ser honesto: vender la medición, no
 la promesa.
 
+### Desplegada
+
+Publicada en **GitHub Pages** mediante un flujo de Actions que empaqueta el
+motor, corre los 488 tests y publica. Así lo servido corresponde siempre al
+código del commit, sin depender de que nadie recuerde ejecutar el empaquetador.
+
+`pwa/demo.csv` **sí se versiona**, al contrario que el resto de `data/`: son
+velas diarias reales de Binance, cuya API pública no restringe la
+redistribución. La de HistData sí, y por eso los datos de forex se quedan fuera
+del repositorio.
+
 ---
 
 ## 10. Estado actual
@@ -411,6 +424,16 @@ presume de no engañarse tampoco debería maquillar esto.
   dejó de parsearse **entero, sin ningún error en consola**: la app se quedó
   en blanco sin pista alguna. Ahora `test_el_bloque_python_no_rompe_la_plantilla`
   lo impide.
+- El primer despliegue falló porque puse los tests antes de generar los
+  artefactos que esos tests validan. Corregido por los dos lados: en CI se
+  construye primero, y en un clon recién hecho esos tests se saltan.
+- El fallback de `construir_pwa.py` llamaba a `synthetic.generar(n=...)`
+  cuando la función real es `synthetic.generate(SyntheticParams(...))`. Era
+  justo la ruta de CI.
+- El demo arrancaba con un 3% de aciertos y lo diagnostiqué mal dos veces
+  antes de medirlo: no era el spread ni el timeframe, sino que la serie
+  sintética con esa semilla cae en un tramo bajista del −8,3%. El veredicto
+  era correcto; el dato de ejemplo era malo.
 
 **Conocido y sin arreglar:**
 
@@ -425,9 +448,8 @@ presume de no engañarse tampoco debería maquillar esto.
 
 ## 13. Pendiente
 
-- `git push` de todo lo pendiente.
-- Desplegar la PWA en un hosting estático (GitHub Pages sirve y es gratis).
 - Probarla instalada en un móvil real, no solo en el navegador de escritorio.
+- Definir para quién es el producto: sin eso no hay hoja de ruta con fechas.
 - Guardar el histórico de intentos entre sesiones, no solo las estrategias.
 - Traducir esta bitácora al inglés si el repo apunta a público internacional.
 
